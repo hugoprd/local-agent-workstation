@@ -5,3 +5,9 @@ description = "a local agent architecture to help at work, at projects and at st
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
+
+[dependency-groups]
+dev = [
+    "black>=26.10.1",
+    "flake8>=7.4.1",
+]

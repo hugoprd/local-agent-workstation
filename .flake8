@@ -1,0 +1,15 @@
+[flake8]
+max-line-length = 96
+
+# E203: space before ':'
+# W503: breaks the line before the binary operator
+extend-ignore = E203, W503
+
+# folders that Flake8 should ignore in the analysis
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    build,
+    dist,
+    chroma_db
