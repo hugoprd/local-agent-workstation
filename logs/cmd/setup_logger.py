@@ -2,7 +2,7 @@ import logging
 import sys
 from pathlib import Path
 
-LOG_DIR = Path(__file__).resolve().parent.parent / "files"
+LOG_DIR = Path(__file__).resolve().parent.parent
 
 
 def get_logger(
@@ -35,7 +35,10 @@ def get_logger(
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     file_name = log_file if log_file else f"{name}.log"
-    log_path = LOG_DIR / file_name
+    log_path = LOG_DIR / name
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    log_path = LOG_DIR / name / file_name
 
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
