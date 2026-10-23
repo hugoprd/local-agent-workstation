@@ -1,6 +1,12 @@
 import os
+import sys
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.append(str(ROOT_DIR))
+
 from typing import List
+from datetime import datetime
 
 from langchain_core.documents import Document
 from langchain_core.tools import tool
@@ -13,6 +19,13 @@ from langchain_community.document_loaders import (
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import UnstructuredExcelLoader
+
+from logs.cmd.setup_logger import get_logger
+
+now = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+LOG_NAME = f"workspace_search_tool_{now}_log"
+logger = get_logger(name=LOG_NAME)
 
 # list of extensions treated as simple text and source code
 TEXT_EXTENSIONS = {
@@ -40,7 +53,9 @@ TEXT_EXTENSIONS = {
 
 
 def _load_single_file(file_path: Path) -> List[Document]:
-    """Identifica a extensão do arquivo e usa o carregador apropriado."""
+    """
+    identifies the file extension and uses the correct loader.
+    """
     ext = file_path.suffix.lower()
     try:
         if ext == ".pdf":
@@ -53,7 +68,7 @@ def _load_single_file(file_path: Path) -> List[Document]:
             try:
                 return UnstructuredExcelLoader(str(file_path)).load()
             except ImportError:
-                print(
+                logger.warning(
                     f"WARNING: to load Excel files ({file_path.name}), "
                     "install 'openpyxl' and 'unstructured'. Skipping..."
                 )
@@ -62,7 +77,7 @@ def _load_single_file(file_path: Path) -> List[Document]:
             # generic reading attempt for unknown extensions
             return TextLoader(str(file_path), encoding="utf-8").load()
     except Exception as e:
-        print(f"Erro ao carregar o arquivo '{file_path.name}': {e}")
+        logger.error(f"ERROR: failed to load the file '{file_path.name}': {e}")
         return []
 
 
