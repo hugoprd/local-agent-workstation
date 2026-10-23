@@ -1,7 +1,22 @@
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.append(str(ROOT_DIR))
+
 import requests
+
+from datetime import datetime
 from bs4 import BeautifulSoup
 from langchain_core.tools import tool
 from langchain_community.tools import DuckDuckGoSearchRun
+
+from logs.cmd.setup_logger import get_logger
+
+now = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+LOG_NAME = f"web_search_tool_{now}_log"
+logger = get_logger(name=LOG_NAME)
 
 web_search = DuckDuckGoSearchRun()
 

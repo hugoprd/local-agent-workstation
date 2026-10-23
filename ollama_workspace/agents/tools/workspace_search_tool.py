@@ -49,6 +49,12 @@ TEXT_EXTENSIONS = {
     ".java",
     ".env",
     ".toml",
+    ".gitignore",
+    ".sh",
+    ".bat",
+    ".csv",
+    ".xlsx",
+    ".xls",
 }
 
 

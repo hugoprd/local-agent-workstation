@@ -9,6 +9,8 @@ from typing_extensions import TypedDict
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(ROOT_DIR))
 
+print(ROOT_DIR)
+
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -17,8 +19,8 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage
 
-from ollama.agents.tools.web_search_tool import web_search, read_web_page
-from ollama.agents.tools.workspace_search_tool import search_workspace_files
+from ollama_workspace.agents.tools.web_search_tool import web_search, read_web_page
+from ollama_workspace.agents.tools.workspace_search_tool import search_workspace_files
 
 from logs.cmd.setup_logger import get_logger
 

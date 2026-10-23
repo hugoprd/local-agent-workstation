@@ -2,7 +2,25 @@ import logging
 import sys
 from pathlib import Path
 
-LOG_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
+
+
+def get_log_path_name(name: str) -> str:
+    """
+    returns the log path name based on the provided name.
+    """
+    words: list[str] = name.split("_")
+
+    final_words: list[str] = []
+    for word in words:
+        final_words.append(word)
+
+        if word == "tool":
+            break
+
+    final_name: str = "_".join(final_words)
+
+    return final_name
 
 
 def get_logger(
@@ -32,13 +50,12 @@ def get_logger(
     logger.addHandler(console_handler)
 
     # 2. file handler
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-
     file_name = log_file if log_file else f"{name}.log"
-    log_path = LOG_DIR / name
+    path_name = get_log_path_name(name)
+    log_path = ROOT_DIR / path_name
     log_path.mkdir(parents=True, exist_ok=True)
 
-    log_path = LOG_DIR / name / file_name
+    log_path = ROOT_DIR / path_name / file_name
 
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
