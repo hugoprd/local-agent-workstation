@@ -3,7 +3,7 @@ max-line-length = 96
 
 # E203: space before ':'
 # W503: breaks the line before the binary operator
-extend-ignore = E203, W503
+extend-ignore = E203, W503, E402
 
 # folders that Flake8 should ignore in the analysis
 exclude =
