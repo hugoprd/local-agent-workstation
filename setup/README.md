@@ -2,7 +2,7 @@
 
 ## table of contents
 
-* 1. [quick installation](#1-quick-installation)
+* [1. quick installation](#1-quick-installation)
 
 ## 1. quick installation
 

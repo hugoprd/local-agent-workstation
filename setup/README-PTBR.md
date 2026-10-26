@@ -2,7 +2,7 @@
 
 ## sumário
 
-* 1. [instalação rápida](#1-instalação-rápida)
+* [1. instalação rápida](#1-instalação-rápida)
 
 ## 1. instalação rápida
 
