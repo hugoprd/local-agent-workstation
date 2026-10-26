@@ -29,8 +29,8 @@ now = datetime.now().strftime("%Y%m%d_%H%M%S")
 LOG_NAME = f"orchestrator_{now}_log"
 logger = get_logger(name=LOG_NAME)
 
-CONFIG_PATH = ROOT_DIR / "ollama" / "config.json"
-PROMPTS_DIR = ROOT_DIR / "ollama" / "agents" / "prompts"
+CONFIG_PATH = ROOT_DIR / "ollama_workspace" / "config.json"
+PROMPTS_DIR = ROOT_DIR / "ollama_workspace" / "agents" / "prompts"
 
 
 class AgentState(TypedDict):
@@ -41,7 +41,7 @@ def get_or_create_config() -> dict:
     """
     reads the config.json file or creates a new one by calling the detect_model.sh script.
     """
-    script_path = ROOT_DIR / "ollama" / "agents" / "utils" / "detect_model.sh"
+    script_path = ROOT_DIR / "ollama_workspace" / "agents" / "utils" / "detect_model.sh"
 
     default_config = {"model": "", "temperature": 0.3}
 
@@ -151,7 +151,7 @@ def main():
     chat_history = []
 
     while True:
-        user_input = input("\nVocê: ")
+        user_input = input("\nUser: ")
         if user_input.lower() in ["exit", "quit"]:
             break
 
@@ -163,7 +163,7 @@ def main():
         chat_history = events["messages"]
 
         response = last_message.content
-        logger.info(f"ORCHESTRATOR RESP: {response}")
+        logger.info(f"ORCHESTRATOR ANSWER: {response}")
 
 
 if __name__ == "__main__":
