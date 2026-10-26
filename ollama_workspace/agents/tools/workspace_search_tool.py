@@ -1,12 +1,10 @@
 import os
 import sys
 from pathlib import Path
+from typing import List
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.append(str(ROOT_DIR))
-
-from typing import List
-from datetime import datetime
 
 from langchain_core.documents import Document
 from langchain_core.tools import tool
@@ -18,24 +16,18 @@ from langchain_community.document_loaders import (
     CSVLoader,
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import UnstructuredExcelLoader
 
 from logs.cmd.setup_logger import get_logger
 
-now = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-LOG_NAME = f"workspace_search_tool_{now}_log"
+LOG_NAME = "workspace_search_tool"
 logger = get_logger(name=LOG_NAME)
 
-# list of extensions treated as simple text and source code
 TEXT_EXTENSIONS = {
     ".txt",
     ".md",
     ".py",
     ".js",
     ".ts",
-    ".jsx",
-    ".tsx",
     ".json",
     ".yaml",
     ".yml",
@@ -43,25 +35,14 @@ TEXT_EXTENSIONS = {
     ".html",
     ".css",
     ".sql",
-    ".c",
-    ".cpp",
-    ".h",
-    ".java",
     ".env",
     ".toml",
-    ".gitignore",
-    ".sh",
-    ".bat",
-    ".csv",
-    ".xlsx",
-    ".xls",
 }
+
+IGNORE_DIRS = {".venv", ".git", "__pycache__", "chroma_db", "logs"}
 
 
 def _load_single_file(file_path: Path) -> List[Document]:
-    """
-    identifies the file extension and uses the correct loader.
-    """
     ext = file_path.suffix.lower()
     try:
         if ext == ".pdf":
@@ -70,32 +51,22 @@ def _load_single_file(file_path: Path) -> List[Document]:
             return CSVLoader(str(file_path), encoding="utf-8").load()
         elif ext in TEXT_EXTENSIONS:
             return TextLoader(str(file_path), encoding="utf-8").load()
-        elif ext in [".xlsx", ".xls"]:
-            try:
-                return UnstructuredExcelLoader(str(file_path)).load()
-            except ImportError:
-                logger.warning(
-                    f"WARNING: to load Excel files ({file_path.name}), "
-                    "install 'openpyxl' and 'unstructured'. Skipping..."
-                )
-                return []
         else:
-            # generic reading attempt for unknown extensions
             return TextLoader(str(file_path), encoding="utf-8").load()
     except Exception as e:
-        logger.error(f"ERROR: failed to load the file '{file_path.name}': {e}")
+        logger.debug(
+            f"ignoring {file_path.name} format not supported (Binary/Unsupported): {e}"
+        )
         return []
 
 
-def _load_all_workspace_docs(workspace_dir: str) -> List[Document]:
-    """
-    search recursively through the workspace folder loading all valid files.
-    """
+def _load_all_workspace_docs(workspace_dir: Path) -> List[Document]:
     documents = []
-    workspace_path = Path(workspace_dir)
 
-    for file_path in workspace_path.rglob("*"):
-        # ignores directories and hidden files (e.g., .gitignore, .DS_Store)
+    for file_path in workspace_dir.rglob("*"):
+        if any(part in IGNORE_DIRS for part in file_path.parts):
+            continue
+
         if file_path.is_file() and not file_path.name.startswith("."):
             docs = _load_single_file(file_path)
             documents.extend(docs)
@@ -104,19 +75,16 @@ def _load_all_workspace_docs(workspace_dir: str) -> List[Document]:
 
 
 def _get_retriever():
-    workspace_dir = "./workspace"
-    chroma_dir = "./chroma_db"
-
-    if not os.path.exists(workspace_dir):
-        os.makedirs(workspace_dir)
+    workspace_dir = ROOT_DIR
+    chroma_dir = ROOT_DIR / "chroma_db"
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
-    # if the local store was already generated and has data, just reconnect
     if os.path.exists(chroma_dir) and os.listdir(chroma_dir):
-        vectorstore = Chroma(persist_directory=chroma_dir, embedding_function=embeddings)
+        logger.info("loading existing local database...")
+        vectorstore = Chroma(persist_directory=str(chroma_dir), embedding_function=embeddings)
     else:
-        # loads files of multiple formats
+        logger.info(f"mapping files in repository: {workspace_dir}")
         docs = _load_all_workspace_docs(workspace_dir)
 
         if docs:
@@ -125,23 +93,27 @@ def _get_retriever():
             ).split_documents(docs)
 
             vectorstore = Chroma.from_documents(
-                documents=splits, embedding=embeddings, persist_directory=chroma_dir
+                documents=splits, embedding=embeddings, persist_directory=str(chroma_dir)
             )
         else:
-            vectorstore = Chroma(persist_directory=chroma_dir, embedding_function=embeddings)
+            vectorstore = Chroma(
+                persist_directory=str(chroma_dir), embedding_function=embeddings
+            )
 
-    return vectorstore.as_retriever(search_kwargs={"k": 3})
+    return vectorstore.as_retriever(search_kwargs={"k": 5})
 
 
 @tool
 def search_workspace_files(query: str) -> str:
     """
     search information within files (PDFs, code, text, CSVs, etc.)
-    saved in the ./workspace folder of the computer.
+    saved in the entire project repository.
     """
+    logger.info(f"searching in local files: {query}")
     retriever = _get_retriever()
     results = retriever.invoke(query)
+
     if not results:
-        return "none relevant documents were found in the workspace folder."
+        return "SYSTEM_ERROR: no relevant documents found. Tell the user the file might not exist or the keywords do not match."  # noqa E501
 
     return "\n---\n".join([doc.page_content for doc in results])

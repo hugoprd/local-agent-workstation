@@ -145,7 +145,7 @@ def orchestrator() -> CompiledStateGraph:
 
 
 def main():
-    logger.info("Agents Orchestrator active. Type 'exit' to quit\n")
+    logger.info("agents orchestrator active. type 'exit' to quit\n")
 
     graph = orchestrator()
     chat_history = []
@@ -169,20 +169,20 @@ def main():
 
             if last_msg.type == "ai":
                 if last_msg.content:
-                    print(f"\nORCHESTRATOR THOUGHT: {last_msg.content}")
+                    print(f"\nORCHESTRATOR THOUGHT: {last_msg.content}\n")
                     logger.info(f"ORCHESTRATOR TEXT: {last_msg.content}")
 
                 if getattr(last_msg, "tool_calls", None):
                     for tool_call in last_msg.tool_calls:
                         msg = (
-                            f"[ACTION] Turning on agent: {tool_call['name']} ",
+                            f"[ACTION] turning on agent: {tool_call['name']} ",
                             f"| Args: {tool_call['args']}",
                         )
                         print(f"\n{msg}")
                         logger.info(msg)
             elif last_msg.type == "tool":
                 msg = (
-                    f"[CONCLUDED] Tool '{last_msg.name}' ",
+                    f"[CONCLUDED] tool '{last_msg.name}' ",
                     f"obtained {len(last_msg.content)} characters of data.",
                 )
                 print(f"{msg}")
