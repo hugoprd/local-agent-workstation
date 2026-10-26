@@ -13,10 +13,10 @@ def get_log_path_name(name: str) -> str:
 
     final_words: list[str] = []
     for word in words:
-        final_words.append(word)
-
-        if word == "tool":
+        if word == "tool" or word == "log" or word.isdigit():
             break
+
+        final_words.append(word)
 
     final_name: str = "_".join(final_words)
 
