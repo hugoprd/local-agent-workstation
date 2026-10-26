@@ -49,4 +49,7 @@ sudo systemctl enable ollama
 echo "downloading the selected model: $TAG_OLLAMA..."
 ollama pull $TAG_OLLAMA
 
+echo "downloading embedding model..."
+ollama pull nomic-embed-text
+
 echo "Ollama setup completed successfully."
