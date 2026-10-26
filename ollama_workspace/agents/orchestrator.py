@@ -145,7 +145,7 @@ def orchestrator() -> CompiledStateGraph:
 
 
 def main():
-    logger.info("agents Orchestrator active. type 'exit' to quit\n")
+    logger.info("Agents Orchestrator active. Type 'exit' to quit\n")
 
     graph = orchestrator()
     chat_history = []
@@ -157,13 +157,39 @@ def main():
 
         chat_history.append(("user", user_input))
 
-        events = graph.invoke({"messages": chat_history})
+        logger.info("Processing user input...")
 
-        last_message = events["messages"][-1]
-        chat_history = events["messages"]
+        events = graph.stream({"messages": chat_history}, stream_mode="values")
 
-        response = last_message.content
-        logger.info(f"ORCHESTRATOR ANSWER: {response}")
+        for i, state_update in enumerate(events):
+            if i == 0:
+                continue
+
+            last_msg = state_update["messages"][-1]
+
+            if last_msg.type == "ai":
+                if last_msg.content:
+                    print(f"\nORCHESTRATOR THOUGHT: {last_msg.content}")
+                    logger.info(f"ORCHESTRATOR TEXT: {last_msg.content}")
+
+                if getattr(last_msg, "tool_calls", None):
+                    for tool_call in last_msg.tool_calls:
+                        msg = (
+                            f"[ACTION] Turning on agent: {tool_call['name']} ",
+                            f"| Args: {tool_call['args']}",
+                        )
+                        print(f"\n{msg}")
+                        logger.info(msg)
+            elif last_msg.type == "tool":
+                msg = (
+                    f"[CONCLUDED] Tool '{last_msg.name}' ",
+                    f"obtained {len(last_msg.content)} characters of data.",
+                )
+                print(f"{msg}")
+                logger.info(msg)
+
+        chat_history = state_update["messages"]
+        print("-" * 19)
 
 
 if __name__ == "__main__":
